@@ -1,7 +1,6 @@
 const express = require('express');
 const path = require('path');
 const qrcode = require('qrcode');
-const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 const app = express();
@@ -27,39 +26,33 @@ function formatEmailBody(payload) {
 }
 
 async function sendReturnCallEmail(payload) {
-  const smtpHost = process.env.SMTP_HOST;
-  const smtpPort = Number(process.env.SMTP_PORT || 587);
-  const smtpUser = process.env.SMTP_USER;
-  const smtpPass = process.env.SMTP_PASS;
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.RESEND_FROM;
 
-  if (!smtpHost || !smtpUser || !smtpPass) {
-    throw new Error('SMTP is not configured in the server environment. Add SMTP_HOST, SMTP_USER and SMTP_PASS in Render.');
+  if (!apiKey || !from) {
+    throw new Error('Resend is not configured in the server environment.');
   }
 
-  const transporter = nodemailer.createTransport({
-    host: smtpHost,
-    port: smtpPort,
-    secure: process.env.SMTP_SECURE === 'true',
-    connectionTimeout: 15000,
-    greetingTimeout: 15000,
-    socketTimeout: 15000,
-    auth: {
-      user: smtpUser,
-      pass: smtpPass,
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
     },
+    body: JSON.stringify({
+      from,
+      to: [MAIL_TO],
+      reply_to: payload.parentEmail,
+      subject: `Nieuw terugbelverzoek: ${payload.childName}`,
+      text: formatEmailBody(payload),
+    }),
   });
 
-  const senderAddress = process.env.SMTP_FROM || MAIL_TO || smtpUser;
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Resend API failed: ${text}`);
+  }
 
-  const message = {
-    from: senderAddress,
-    to: MAIL_TO,
-    replyTo: payload.parentEmail,
-    subject: `Nieuw terugbelverzoek: ${payload.childName}`,
-    text: formatEmailBody(payload),
-  };
-
-  await transporter.sendMail(message);
   return { delivered: true };
 }
 
@@ -118,7 +111,7 @@ app.post('/api/return-call', async (req, res) => {
     const result = await sendReturnCallEmail(payload);
     if (!result || result.delivered === false) {
       return res.status(503).json({
-        message: 'De mailserver is niet beschikbaar. Neem contact op met de beheerder of probeer het later opnieuw.',
+        message: 'De mailserver is niet beschikbaar. Probeer het later opnieuw.',
       });
     }
 
