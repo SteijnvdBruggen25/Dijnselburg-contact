@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const qrcode = require('qrcode');
+const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 const app = express();
@@ -9,7 +10,7 @@ const MAIL_TO = process.env.MAIL_TO || 'zwembad.dijnselburg@sro.nl';
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, 'public')));
 
 function formatEmailBody(payload) {
   return [
@@ -17,6 +18,7 @@ function formatEmailBody(payload) {
     '',
     `Naam kind: ${payload.childName}`,
     `Telefoonnummer ouder: ${payload.parentPhone}`,
+    `Mailadres ouder: ${payload.parentEmail}`,
     `Lesgever: ${payload.teacher}`,
     `Dag: ${payload.day}`,
     `Tijd: ${payload.time}`,
@@ -25,45 +27,52 @@ function formatEmailBody(payload) {
 }
 
 async function sendReturnCallEmail(payload) {
-  const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.RESEND_FROM || 'onboarding@resend.dev';
+  const smtpHost = process.env.SMTP_HOST;
+  const smtpPort = Number(process.env.SMTP_PORT || 587);
+  const smtpUser = process.env.SMTP_USER;
+  const smtpPass = process.env.SMTP_PASS;
 
-  if (!apiKey) {
-    throw new Error('RESEND_API_KEY is missing.');
+  if (!smtpHost || !smtpUser || !smtpPass) {
+    throw new Error('SMTP is not configured in the server environment. Add SMTP_HOST, SMTP_USER and SMTP_PASS in Render.');
   }
 
-  const response = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
+  const transporter = nodemailer.createTransport({
+    host: smtpHost,
+    port: smtpPort,
+    secure: process.env.SMTP_SECURE === 'true',
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 15000,
+    auth: {
+      user: smtpUser,
+      pass: smtpPass,
     },
-    body: JSON.stringify({
-      from,
-      to: [MAIL_TO],
-      subject: `Nieuw terugbelverzoek: ${payload.childName}`,
-      text: formatEmailBody(payload),
-    }),
   });
 
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Resend failed: ${text}`);
-  }
+  const senderAddress = process.env.SMTP_FROM || MAIL_TO || smtpUser;
 
+  const message = {
+    from: senderAddress,
+    to: MAIL_TO,
+    replyTo: payload.parentEmail,
+    subject: `Nieuw terugbelverzoek: ${payload.childName}`,
+    text: formatEmailBody(payload),
+  };
+
+  await transporter.sendMail(message);
   return { delivered: true };
 }
 
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.get('/contact', (req, res) => {
-  res.sendFile(path.join(__dirname, 'contact.html'));
+  res.sendFile(path.join(__dirname, 'public', 'contact.html'));
 });
 
 app.get('/bedankt', (req, res) => {
-res.sendFile(path.join(__dirname, 'public', 'bedankt.html'));
+  res.sendFile(path.join(__dirname, 'public', 'bedankt.html'));
 });
 
 app.get('/qr', async (req, res) => {
@@ -92,13 +101,14 @@ app.post('/api/return-call', async (req, res) => {
   const payload = {
     childName: String(req.body.childName || '').trim(),
     parentPhone: String(req.body.parentPhone || '').trim(),
+    parentEmail: String(req.body.parentEmail || '').trim(),
     teacher: String(req.body.teacher || '').trim(),
     day: String(req.body.day || '').trim(),
     time: String(req.body.time || '').trim(),
     question: String(req.body.question || '').trim(),
   };
 
-  if (!payload.childName || !payload.parentPhone || !payload.teacher || !payload.day || !payload.time || !payload.question) {
+  if (!payload.childName || !payload.parentPhone || !payload.parentEmail || !payload.teacher || !payload.day || !payload.time || !payload.question) {
     return res.status(400).json({
       message: 'Vul alle verplichte velden in om een terugbelverzoek te plaatsen.',
     });
@@ -106,10 +116,9 @@ app.post('/api/return-call', async (req, res) => {
 
   try {
     const result = await sendReturnCallEmail(payload);
-
     if (!result || result.delivered === false) {
       return res.status(503).json({
-        message: 'De mailserver is niet beschikbaar. Probeer het later opnieuw.',
+        message: 'De mailserver is niet beschikbaar. Neem contact op met de beheerder of probeer het later opnieuw.',
       });
     }
 
@@ -119,7 +128,7 @@ app.post('/api/return-call', async (req, res) => {
   } catch (error) {
     console.error('Could not send return-call email:', error);
     return res.status(500).json({
-      message: 'Er ging iets mis bij het verzenden van uw verzoek. Probeer het later opnieuw.',
+      message: 'Er ging iets mis bij het verzenden van uw verzoek. Controleer de mailinstellingen en probeer het later opnieuw.',
     });
   }
 });
