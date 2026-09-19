@@ -1,7 +1,6 @@
 const express = require('express');
 const path = require('path');
 const qrcode = require('qrcode');
-const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 const app = express();
@@ -41,19 +40,9 @@ async function sendReturnCallEmail(payload) {
     },
     body: JSON.stringify({
       from,
-      to: [process.env.MAIL_TO || 'zwembad.dijnselburg@sro.nl'],
-      reply_to: payload.parentPhone,
+      to: [MAIL_TO],
       subject: `Nieuw terugbelverzoek: ${payload.childName}`,
-      text: [
-        'Nieuw terugbelverzoek voor zwemlessen',
-        '',
-        `Naam kind: ${payload.childName}`,
-        `Telefoonnummer ouder: ${payload.parentPhone}`,
-        `Lesgever: ${payload.teacher}`,
-        `Dag: ${payload.day}`,
-        `Tijd: ${payload.time}`,
-        `Vraag: ${payload.question}`,
-      ].join('\n'),
+      text: formatEmailBody(payload),
     }),
   });
 
@@ -112,7 +101,14 @@ app.post('/api/return-call', async (req, res) => {
   }
 
   try {
-    await sendReturnCallEmail(payload);
+    const result = await sendReturnCallEmail(payload);
+
+    if (!result || result.delivered === false) {
+      return res.status(503).json({
+        message: 'De mailserver is niet beschikbaar. Probeer het later opnieuw.',
+      });
+    }
+
     return res.status(200).json({
       message: 'Bedankt! Uw terugbelverzoek is ontvangen. We nemen zo snel mogelijk contact met u op.',
     });
