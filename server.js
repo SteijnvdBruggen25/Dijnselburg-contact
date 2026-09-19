@@ -10,7 +10,7 @@ const MAIL_TO = process.env.MAIL_TO || 'zwembad.dijnselburg@sro.nl';
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname));
 
 function formatEmailBody(payload) {
   return [
@@ -61,11 +61,11 @@ async function sendReturnCallEmail(payload) {
 }
 
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.get('/contact', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'contact.html'));
+  res.sendFile(path.join(__dirname, 'contact.html'));
 });
 
 app.get('/qr', async (req, res) => {
