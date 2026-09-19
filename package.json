@@ -1,0 +1,16 @@
+{
+  "name": "dijnselburg-qr-contact",
+  "version": "1.0.0",
+  "description": "QR-code contact form for return-call requests at zwembad Dijnselburg",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "nodemailer": "^6.9.14",
+    "qrcode": "^1.5.4"
+  }
+}
