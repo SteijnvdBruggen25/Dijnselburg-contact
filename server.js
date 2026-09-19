@@ -62,6 +62,10 @@ app.get('/contact', (req, res) => {
   res.sendFile(path.join(__dirname, 'contact.html'));
 });
 
+app.get('/bedankt', (req, res) => {
+res.sendFile(path.join(__dirname, 'public', 'bedankt.html'));
+});
+
 app.get('/qr', async (req, res) => {
   const baseUrl = process.env.PUBLIC_BASE_URL || `${req.protocol}://${req.get('host')}`;
   const qrTarget = `${baseUrl.replace(/\/$/, '')}/contact`;
