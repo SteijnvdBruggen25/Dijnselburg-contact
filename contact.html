@@ -36,6 +36,16 @@
         padding: 32px;
         box-shadow: 0 18px 40px rgba(15, 76, 129, 0.08);
       }
+      .brand {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+      }
+      .brand img {
+        display: block;
+        width: min(100%, 520px);
+        height: auto;
+      }
       h1 {
         margin: 0 0 8px;
         color: var(--primary);
@@ -122,6 +132,10 @@
   <body>
     <main class="container">
       <section class="panel">
+        <div class="brand" aria-label="SRO Zeist logo">
+          <img src="/sro-zeist-logo.png" alt="SRO Zeist" />
+        </div>
+
         <h1>Terugbelverzoek</h1>
         <p class="subtext">
           Vul hieronder uw gegevens in voor vragen over de zwemlessen van uw kind. Wij nemen dan zo snel mogelijk contact met u op.
@@ -133,9 +147,16 @@
             <input id="childName" name="childName" type="text" required />
           </div>
 
-          <div class="field">
-            <label for="parentPhone">Telefoonnummer ouder</label>
-            <input id="parentPhone" name="parentPhone" type="tel" required placeholder="06-12345678" />
+          <div class="two-col">
+            <div class="field">
+              <label for="parentPhone">Telefoonnummer ouder</label>
+              <input id="parentPhone" name="parentPhone" type="tel" required placeholder="06-12345678" />
+            </div>
+
+            <div class="field">
+              <label for="parentEmail">Mailadres ouder</label>
+              <input id="parentEmail" name="parentEmail" type="email" required placeholder="voorbeeld@email.nl" />
+            </div>
           </div>
 
           <div class="two-col">
@@ -198,3 +219,4 @@
     </script>
   </body>
 </html>
+
