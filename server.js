@@ -65,20 +65,6 @@ async function sendReturnCallEmail(payload) {
   return { delivered: true };
 }
 
-  const senderAddress = process.env.SMTP_FROM || MAIL_TO || smtpUser;
-
-  const message = {
-    from: senderAddress,
-    to: MAIL_TO,
-    replyTo: payload.parentPhone,
-    subject: `Nieuw terugbelverzoek: ${payload.childName}`,
-    text: formatEmailBody(payload),
-  };
-
-  await transporter.sendMail(message);
-  return { delivered: true };
-}
-
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
