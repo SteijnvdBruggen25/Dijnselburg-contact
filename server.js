@@ -26,25 +26,44 @@ function formatEmailBody(payload) {
 }
 
 async function sendReturnCallEmail(payload) {
-  const smtpHost = process.env.SMTP_HOST;
-  const smtpPort = Number(process.env.SMTP_PORT || 587);
-  const smtpUser = process.env.SMTP_USER;
-  const smtpPass = process.env.SMTP_PASS;
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.RESEND_FROM || 'onboarding@resend.dev';
 
-  if (!smtpHost || !smtpUser || !smtpPass) {
-    console.log('SMTP is not configured. Email was not sent. Payload:', payload);
-    return { delivered: false, reason: 'SMTP is not configured.' };
+  if (!apiKey) {
+    throw new Error('RESEND_API_KEY is missing.');
   }
 
-  const transporter = nodemailer.createTransport({
-    host: smtpHost,
-    port: smtpPort,
-    secure: process.env.SMTP_SECURE === 'true',
-    auth: {
-      user: smtpUser,
-      pass: smtpPass,
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
     },
+    body: JSON.stringify({
+      from,
+      to: [process.env.MAIL_TO || 'zwembad.dijnselburg@sro.nl'],
+      reply_to: payload.parentPhone,
+      subject: `Nieuw terugbelverzoek: ${payload.childName}`,
+      text: [
+        'Nieuw terugbelverzoek voor zwemlessen',
+        '',
+        `Naam kind: ${payload.childName}`,
+        `Telefoonnummer ouder: ${payload.parentPhone}`,
+        `Lesgever: ${payload.teacher}`,
+        `Dag: ${payload.day}`,
+        `Tijd: ${payload.time}`,
+        `Vraag: ${payload.question}`,
+      ].join('\n'),
+    }),
   });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Resend failed: ${text}`);
+  }
+
+  return { delivered: true };
+}
 
   const senderAddress = process.env.SMTP_FROM || MAIL_TO || smtpUser;
 
