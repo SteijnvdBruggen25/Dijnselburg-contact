@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bedankt – Zwembad Dijnselburg</title>
+    <style>
+      :root {
+        --bg: #edf5ff;
+        --panel: #ffffff;
+        --primary: #0f4c81;
+        --primary-dark: #0b3d68;
+        --text: #1f2937;
+        --muted: #64748b;
+        --border: #dbe4f1;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        background: linear-gradient(180deg, #edf5ff 0%, #f8fbff 100%);
+        color: var(--text);
+      }
+      .container {
+        max-width: 620px;
+        margin: 80px auto;
+        padding: 20px;
+      }
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 36px 28px;
+        box-shadow: 0 18px 40px rgba(15, 76, 129, 0.08);
+        text-align: center;
+      }
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 18px;
+        padding: 10px 18px;
+        border-radius: 999px;
+        background: #ecf7ff;
+        border: 1px solid #cfe7ff;
+      }
+      .brand-mark {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #0f4c81 0%, #4fb3ff 100%);
+        display: grid;
+        place-items: center;
+        color: #fff;
+        font-size: 22px;
+      }
+      .brand-text {
+        text-align: left;
+        line-height: 1.1;
+      }
+      .brand-text strong {
+        display: block;
+        font-size: 0.8rem;
+        letter-spacing: 0.12em;
+        color: var(--primary);
+      }
+      .brand-text span {
+        display: block;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--text);
+      }
+      h1 {
+        margin: 0 0 14px;
+        color: var(--primary);
+        font-size: clamp(2rem, 4vw, 2.8rem);
+      }
+      p {
+        margin: 0 0 18px;
+        color: var(--muted);
+        line-height: 1.6;
+        font-size: 1.05rem;
+      }
+      .button {
+        display: inline-block;
+        background: var(--primary);
+        color: #fff;
+        text-decoration: none;
+        border-radius: 999px;
+        padding: 14px 24px;
+        font-weight: 700;
+      }
+      .button:hover {
+        background: var(--primary-dark);
+      }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <section class="panel">
+        <div class="brand" aria-label="Zwembad Dijnselburg logo">
+          <div class="brand-mark">🏊</div>
+          <div class="brand-text">
+            <strong>ZWEMBAD</strong>
+            <span>Dijnselburg</span>
+          </div>
+        </div>
+        <h1>Bedankt!</h1>
+        <p>
+          Uw terugbelverzoek is succesvol verzonden. Wij nemen zo snel mogelijk contact met u op.
+        </p>
+        <a class="button" href="/contact">Nieuw verzoek</a>
+      </section>
+    </main>
+  </body>
+</html>
