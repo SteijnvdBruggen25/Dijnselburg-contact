@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Terugbelverzoek – Zwembad Dijnselburg</title>
+    <style>
+      :root {
+        --bg: #edf5ff;
+        --panel: #ffffff;
+        --primary: #0f4c81;
+        --primary-dark: #0b3d68;
+        --text: #1f2937;
+        --muted: #64748b;
+        --border: #dbe4f1;
+        --error: #b91c1c;
+        --success: #0f766e;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        background: linear-gradient(180deg, #edf5ff 0%, #f8fbff 100%);
+        color: var(--text);
+      }
+      .container {
+        max-width: 680px;
+        margin: 48px auto;
+        padding: 18px;
+      }
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 32px;
+        box-shadow: 0 18px 40px rgba(15, 76, 129, 0.08);
+      }
+      h1 {
+        margin: 0 0 8px;
+        color: var(--primary);
+        font-size: clamp(1.8rem, 3vw, 2.6rem);
+      }
+      .subtext {
+        color: var(--muted);
+        margin-bottom: 24px;
+        line-height: 1.6;
+      }
+      form {
+        display: grid;
+        gap: 18px;
+      }
+      .field {
+        display: grid;
+        gap: 8px;
+      }
+      label {
+        font-weight: 700;
+      }
+      input,
+      select,
+      textarea {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px 14px;
+        font-size: 1rem;
+        color: var(--text);
+        background: #fff;
+      }
+      textarea {
+        min-height: 120px;
+        resize: vertical;
+      }
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: 3px solid rgba(15, 76, 129, 0.12);
+        border-color: var(--primary);
+      }
+      .two-col {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+      }
+      .button {
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        border-radius: 999px;
+        padding: 14px 24px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .button:hover {
+        background: var(--primary-dark);
+      }
+      .status {
+        min-height: 24px;
+        padding: 12px 14px;
+        border-radius: 10px;
+        display: none;
+        font-weight: 700;
+      }
+      .status.error {
+        background: rgba(185, 28, 28, 0.12);
+        border: 1px solid rgba(185, 28, 28, 0.2);
+        color: var(--error);
+      }
+      .status.success {
+        background: rgba(15, 118, 110, 0.12);
+        border: 1px solid rgba(15, 118, 110, 0.2);
+        color: var(--success);
+      }
+      @media (max-width: 600px) {
+        .two-col {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <section class="panel">
+        <h1>Terugbelverzoek</h1>
+        <p class="subtext">
+          Vul hieronder uw gegevens in voor vragen over de zwemlessen van uw kind. Wij nemen dan zo snel mogelijk contact met u op.
+        </p>
+
+        <form id="returnCallForm">
+          <div class="field">
+            <label for="childName">Naam kind</label>
+            <input id="childName" name="childName" type="text" required />
+          </div>
+
+          <div class="field">
+            <label for="parentPhone">Telefoonnummer ouder</label>
+            <input id="parentPhone" name="parentPhone" type="tel" required placeholder="06-12345678" />
+          </div>
+
+          <div class="two-col">
+            <div class="field">
+              <label for="teacher">Lesgever</label>
+              <input id="teacher" name="teacher" type="text" required />
+            </div>
+            <div class="field">
+              <label for="day">Dag</label>
+              <input id="day" name="day" type="text" required placeholder="Bijv. woensdag" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="time">Tijd</label>
+            <input id="time" name="time" type="text" required placeholder="Bijv. 17:30" />
+          </div>
+
+          <div class="field">
+            <label for="question">Vraag</label>
+            <textarea id="question" name="question" required placeholder="Typ hier uw vraag..."></textarea>
+          </div>
+
+          <button class="button" type="submit">Verstuur terugbelverzoek</button>
+          <div id="status" class="status" aria-live="polite"></div>
+        </form>
+      </section>
+    </main>
+
+    <script>
+      const form = document.getElementById('returnCallForm');
+      const status = document.getElementById('status');
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const formData = new FormData(form);
+        const payload = Object.fromEntries(formData.entries());
+
+        status.className = 'status';
+        status.textContent = '';
+
+        try {
+          const response = await fetch('/api/return-call', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+
+          const data = await response.json();
+          if (!response.ok) {
+            throw new Error(data.message || 'Er ging iets mis.');
+          }
+
+          status.className = 'status success';
+          status.textContent = data.message;
+          form.reset();
+        } catch (error) {
+          status.className = 'status error';
+          status.textContent = error.message || 'Er ging iets mis.';
+        }
+      });
+    </script>
+  </body>
+</html>
