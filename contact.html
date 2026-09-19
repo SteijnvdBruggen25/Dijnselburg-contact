@@ -189,9 +189,7 @@
             throw new Error(data.message || 'Er ging iets mis.');
           }
 
-          status.className = 'status success';
-          status.textContent = data.message;
-          form.reset();
+          window.location.href = '/bedankt';
         } catch (error) {
           status.className = 'status error';
           status.textContent = error.message || 'Er ging iets mis.';
