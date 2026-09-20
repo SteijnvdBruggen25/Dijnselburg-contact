@@ -17,7 +17,7 @@ function formatEmailBody(payload) {
     '',
     `Naam kind: ${payload.childName}`,
     `Telefoonnummer ouder: ${payload.parentPhone}`,
-    `Mailadres ouder: ${payload.parentEmail}`,
+    `E-mailadres ouder: ${payload.parentEmail}`,
     `Lesgever: ${payload.teacher}`,
     `Dag: ${payload.day}`,
     `Tijd: ${payload.time}`,
@@ -27,30 +27,31 @@ function formatEmailBody(payload) {
 
 async function sendReturnCallEmail(payload) {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.RESEND_FROM;
+  const fromAddress = process.env.MAIL_FROM;
+  const toAddress = process.env.MAIL_TO || MAIL_TO;
 
-  if (!apiKey || !from) {
+  if (!apiKey || !fromAddress || !toAddress) {
     throw new Error('Resend is not configured in the server environment.');
   }
 
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      from,
-      to: [MAIL_TO],
-      reply_to: payload.parentEmail,
+      from: fromAddress,
+      to: [toAddress],
+      reply_to: payload.parentEmail || payload.parentPhone || fromAddress,
       subject: `Nieuw terugbelverzoek: ${payload.childName}`,
       text: formatEmailBody(payload),
     }),
   });
 
   if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Resend API failed: ${text}`);
+    const errorText = await response.text();
+    throw new Error(`Resend email failed: ${response.status} ${errorText}`);
   }
 
   return { delivered: true };
@@ -111,7 +112,7 @@ app.post('/api/return-call', async (req, res) => {
     const result = await sendReturnCallEmail(payload);
     if (!result || result.delivered === false) {
       return res.status(503).json({
-        message: 'De mailserver is niet beschikbaar. Probeer het later opnieuw.',
+        message: 'De mailserver is niet beschikbaar. Neem contact op met de beheerder of probeer het later opnieuw.',
       });
     }
 
